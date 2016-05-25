@@ -9,10 +9,15 @@
 import UIKit
 import QuartzCore
 
-class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerControllerDelegate, UITableViewDelegate, UITableViewDataSource, NSURLSessionDelegate{
+class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerControllerDelegate, UITableViewDelegate, UITableViewDataSource, NSURLSessionDelegate, UITextViewDelegate{
 
+    @IBAction func doneEditing(sender: AnyObject) {
+        NoteLabel.resignFirstResponder()
+    }
+    
     var imagePicker: UIImagePickerController!
     
+    @IBOutlet weak var doneButton: UIBarButtonItem!
     @IBOutlet weak var image: UIImageView!
     @IBOutlet weak var NoteLabel: UITextView!
     
@@ -30,6 +35,7 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
         /*INIT*/
         navigationController?.delegate = self
         
@@ -45,6 +51,8 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
 
         image.contentMode = UIViewContentMode.ScaleAspectFit
         
+        doneButton.enabled = false
+        NoteLabel.delegate = self
         // Do any additional setup after loading the view.
     }
     
@@ -142,6 +150,14 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
     }
     
     
+    func textViewDidBeginEditing(textView: UITextView) {
+        doneButton.enabled = true
+    }
+    
+    func textViewDidEndEditing(textView: UITextView) {
+        doneButton.enabled = false
+    }
+    
     @IBAction func SaveNote(sender: AnyObject) {
         if clientChoose != nil &&
             NoteLabel.text != nil &&
@@ -150,6 +166,8 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
             var dateFormatter = NSDateFormatter()
             dateFormatter.dateFormat = "dd/MM/yyyy hh-mm-ss"
             
+            if image.image == nil {
+ 
             var lobj_Request: NSMutableURLRequest = SOAP.addNote(NoteLabel.text,date: dateFormatter.stringFromDate(dateNow) , idClient: String(clientChoose.getid()), idTech: String(techChoose.getid()), important: Important.on,photo: "");
             
             var configuration =
@@ -162,6 +180,42 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
                     self.navigationController?.popViewControllerAnimated(true)
             })
             task.resume()
+            
+            } else {
+                
+                let imageData:NSData = UIImageJPEGRepresentation(image.image!, 0.5)!
+                
+                var lobj_Request: NSMutableURLRequest = SOAP.uploadPhoto(imageData.base64EncodedStringWithOptions(.Encoding64CharacterLineLength));
+                
+                var configuration =
+                    NSURLSessionConfiguration.defaultSessionConfiguration()
+                var session = NSURLSession(configuration: configuration,
+                                           delegate: self,
+                                           delegateQueue:NSOperationQueue.mainQueue())
+                
+                var task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
+                    var strData = NSString(data: data!, encoding: NSUTF8StringEncoding)
+                    
+                    let xml = SWXMLHash.parse(data!);
+                    let photo = xml["soap:Envelope"]["soap:Body"]["uploadPhotoResponse"]["uploadPhotoResult"].element?.text
+                    
+                    let lobj_Request: NSMutableURLRequest = SOAP.addNote(self.NoteLabel.text,date: dateFormatter.stringFromDate(self.dateNow) , idClient: String(self.clientChoose.getid()), idTech: String(self.techChoose.getid()), important: self.Important.on,photo: photo!);
+                    
+                    var configuration =
+                        NSURLSessionConfiguration.defaultSessionConfiguration()
+                    var session = NSURLSession(configuration: configuration,
+                        delegate: self,
+                        delegateQueue:NSOperationQueue.mainQueue())
+                    
+                    var task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
+                        self.navigationController?.popViewControllerAnimated(true)
+                    })
+                    task.resume()
+                    
+                })
+                task.resume()
+                
+            }
             
         } else {
             
@@ -220,7 +274,9 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
     @IBAction func takePicture(sender: AnyObject) {
         imagePicker = UIImagePickerController()
         imagePicker!.delegate = self
-        imagePicker!.sourceType = .Camera
+        
+        //CHANGE TO CAMERA
+        imagePicker!.sourceType = .PhotoLibrary
             
         presentViewController(imagePicker!,animated: true,completion: nil)
     }

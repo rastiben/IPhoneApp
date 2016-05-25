@@ -8,7 +8,7 @@
 
 import UIKit
 
-class DataTableViewController: UITableViewController,NSURLSessionDelegate {
+class DataTableViewController: UITableViewController,NSURLSessionDelegate{
     
     var Notes:[Note] = []
     var FilteredNote:[Note] = []
@@ -27,8 +27,16 @@ class DataTableViewController: UITableViewController,NSURLSessionDelegate {
         searchController.searchResultsUpdater = self
         searchController.dimsBackgroundDuringPresentation = false
         definesPresentationContext = true
+        
+        searchController.searchBar.scopeButtonTitles = ["Client", "Technicien"]
+        searchController.searchBar.delegate = self
+        
         tableView.tableHeaderView = searchController.searchBar
         searchController.searchBar.placeholder = "Rechercher un client"
+        
+        //SCOPE BAR
+        //searchController.searchBar.showsScopeBar = true
+        //searchController.searchBar.scopeButtonTitles = ["Client","Technicien"]
         
         //REFRESHCONTROL
         
@@ -190,14 +198,17 @@ class DataTableViewController: UITableViewController,NSURLSessionDelegate {
     //RESEARCH
     func filterContentForSearchText(searchText:String,scope:String = "All"){
         
-        FilteredNote = Notes.filter{Note in
-            return Note.getClient().lowercaseString.containsString("411\(searchText.lowercaseString)")
+        if scope == "Technicien"{
+            FilteredNote = Notes.filter{Note in
+                return Note.getTech().lowercaseString.containsString(searchText.lowercaseString)
+            }
+        } else {
+            FilteredNote = Notes.filter{Note in
+                return Note.getClient().lowercaseString.containsString("411\(searchText.lowercaseString)")
+            }
         }
         tableView.reloadData()
     }
-    
-    
-    
     
     override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
         
@@ -272,9 +283,12 @@ class DataTableViewController: UITableViewController,NSURLSessionDelegate {
     }
 }
 
-extension DataTableViewController: UISearchResultsUpdating{
+extension DataTableViewController: UISearchResultsUpdating, UISearchBarDelegate{
     func updateSearchResultsForSearchController(searchController: UISearchController){
         filterContentForSearchText(searchController.searchBar.text!)
+    }
+    func searchBar(searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
+        filterContentForSearchText(searchBar.text!, scope: searchBar.scopeButtonTitles![selectedScope])
     }
 }
 

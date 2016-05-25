@@ -11,6 +11,7 @@ import UIKit
 class clientController: UITableViewController, UINavigationControllerDelegate ,NSURLSessionDelegate{
 
     var Clients:[Customer] = []
+    var Section:[Int] = []
     var FilteredClients:[Customer] = []
     let searchController = UISearchController(searchResultsController: nil)
     
@@ -29,6 +30,8 @@ class clientController: UITableViewController, UINavigationControllerDelegate ,N
         tableView.separatorStyle = UITableViewCellSeparatorStyle.None
         
         activityIndicatorView.startAnimating()
+        
+        
         
         //GET NOTE
         var lobj_Request: NSMutableURLRequest = SOAP.getCustomers();
@@ -52,8 +55,24 @@ class clientController: UITableViewController, UINavigationControllerDelegate ,N
                 var str:String = (elem.element?.text)!
                 var strSplit = str.componentsSeparatedByString(";")
                 //id note client date
+                
                 self.Clients.append(Customer(id: Int(strSplit[0])!,Client: strSplit[1]))
             }
+            
+            /*var letters:NSString = "2abcdefghijklmnopqrstuvwxyz"
+            var lastChar = "2"
+            count = 0
+            var letterCount = 0
+            for client in self.Clients{
+                if client.getClient().lowercaseString.containsString("411\(lastChar)") {
+                    count += 1
+                } else {
+                    letterCount += 1
+                    lastChar = letters.substringWithRange(NSRange(location: letterCount, length: 1))
+                    self.Section.append(count)
+                    count = 0
+                }
+            }*/
             
             dispatch_async(dispatch_get_main_queue(), { () -> Void in
                 sleep(1)
