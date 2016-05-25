@@ -45,7 +45,7 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
         
         dateNow = NSDate()
 
-        var displayDate = NSDateFormatter()
+        let displayDate = NSDateFormatter()
         displayDate.dateFormat = "MMM dd"
         Date.text = displayDate.stringFromDate(dateNow)
 
@@ -64,24 +64,22 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
         var alertTableView = UITableView()
 
         //GETTECH//
-        var lobj_Request: NSMutableURLRequest = SOAP.getTech();
+        let lobj_Request: NSMutableURLRequest = SOAP.getTech();
             
-        var configuration =
+        let configuration =
                 NSURLSessionConfiguration.defaultSessionConfiguration()
-        var session = NSURLSession(configuration: configuration,
+        let session = NSURLSession(configuration: configuration,
                                        delegate: self,
                                        delegateQueue:NSOperationQueue.mainQueue())
             
-        var task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
-            
-            var strData = NSString(data: data!, encoding: NSUTF8StringEncoding)
-            
+        let task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
+
             let xml = SWXMLHash.parse(data!);
             
             var count:Int = 1
             for elem in xml["soap:Envelope"]["soap:Body"]["getTechResponse"]["getTechResult"]["anyType"] {
                 
-                var str:String = (elem.element?.text)!
+                let str:String = (elem.element?.text)!
                 //id note client date
                 
                 self.listTech.append(Tech(id: count,Tech: str))
@@ -163,21 +161,31 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
             NoteLabel.text != nil &&
             techChoose != nil {
             
-            var dateFormatter = NSDateFormatter()
+            let dateFormatter = NSDateFormatter()
             dateFormatter.dateFormat = "dd/MM/yyyy hh-mm-ss"
             
             if image.image == nil {
  
-            var lobj_Request: NSMutableURLRequest = SOAP.addNote(NoteLabel.text,date: dateFormatter.stringFromDate(dateNow) , idClient: String(clientChoose.getid()), idTech: String(techChoose.getid()), important: Important.on,photo: "");
+            let lobj_Request: NSMutableURLRequest = SOAP.addNote(NoteLabel.text,date: dateFormatter.stringFromDate(dateNow) , idClient: String(clientChoose.getid()), idTech: String(techChoose.getid()), important: Important.on,photo: "");
             
-            var configuration =
+            let configuration =
                 NSURLSessionConfiguration.defaultSessionConfiguration()
-            var session = NSURLSession(configuration: configuration,
+            let session = NSURLSession(configuration: configuration,
                                        delegate: self,
                                        delegateQueue:NSOperationQueue.mainQueue())
             
-            var task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
+            let task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
+                
+                let xml = SWXMLHash.parse(data!)
+                
+                if xml["soap:Envelope"]["soap:Body"]["soap:Fault"].element != nil {
+                    let alert = UIAlertController(title: "Erreur", message: "Erreur lors de l'envoie de le note", preferredStyle: .Alert)
+                    let okAction = UIAlertAction(title: "OK", style: .Default, handler: nil)
+                    alert.addAction(okAction)
+                    self.presentViewController(alert, animated: true, completion: nil)
+                } else {
                     self.navigationController?.popViewControllerAnimated(true)
+                }
             })
             task.resume()
             
@@ -185,29 +193,28 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
                 
                 let imageData:NSData = UIImageJPEGRepresentation(image.image!, 0.5)!
                 
-                var lobj_Request: NSMutableURLRequest = SOAP.uploadPhoto(imageData.base64EncodedStringWithOptions(.Encoding64CharacterLineLength));
+                let lobj_Request: NSMutableURLRequest = SOAP.uploadPhoto(imageData.base64EncodedStringWithOptions(.Encoding64CharacterLineLength));
                 
-                var configuration =
+                let configuration =
                     NSURLSessionConfiguration.defaultSessionConfiguration()
-                var session = NSURLSession(configuration: configuration,
+                let session = NSURLSession(configuration: configuration,
                                            delegate: self,
                                            delegateQueue:NSOperationQueue.mainQueue())
                 
-                var task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
-                    var strData = NSString(data: data!, encoding: NSUTF8StringEncoding)
-                    
+                let task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
+ 
                     let xml = SWXMLHash.parse(data!);
                     let photo = xml["soap:Envelope"]["soap:Body"]["uploadPhotoResponse"]["uploadPhotoResult"].element?.text
                     
                     let lobj_Request: NSMutableURLRequest = SOAP.addNote(self.NoteLabel.text,date: dateFormatter.stringFromDate(self.dateNow) , idClient: String(self.clientChoose.getid()), idTech: String(self.techChoose.getid()), important: self.Important.on,photo: photo!);
                     
-                    var configuration =
+                    let configuration =
                         NSURLSessionConfiguration.defaultSessionConfiguration()
-                    var session = NSURLSession(configuration: configuration,
+                    let session = NSURLSession(configuration: configuration,
                         delegate: self,
                         delegateQueue:NSOperationQueue.mainQueue())
                     
-                    var task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
+                    let task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
                         self.navigationController?.popViewControllerAnimated(true)
                     })
                     task.resume()
@@ -219,7 +226,7 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
             
         } else {
             
-            var alert = UIAlertController(title: "Erreur", message: "Tout les champs ne sont pas renseigné", preferredStyle: .Alert)
+            let alert = UIAlertController(title: "Erreur", message: "Tout les champs ne sont pas renseigné", preferredStyle: .Alert)
             let okAction = UIAlertAction(title: "OK", style: .Default, handler: nil)
             alert.addAction(okAction)
             self.presentViewController(alert, animated: true, completion: nil)
@@ -246,7 +253,7 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
     
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        var cell = UITableViewCell(style:UITableViewCellStyle.Default,reuseIdentifier:"LabelCell")
+        let cell = UITableViewCell(style:UITableViewCellStyle.Default,reuseIdentifier:"LabelCell")
         
         cell.textLabel?.text = listTech[indexPath.row].getTech()
         
@@ -254,7 +261,7 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
     }
     
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        var cell = tableView.cellForRowAtIndexPath(indexPath)
+        let cell = tableView.cellForRowAtIndexPath(indexPath)
         self.Technicien.text = cell?.textLabel?.text
         
         techChoose = listTech[indexPath.row]
@@ -276,7 +283,7 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
         imagePicker!.delegate = self
         
         //CHANGE TO CAMERA
-        imagePicker!.sourceType = .PhotoLibrary
+        imagePicker!.sourceType = .Camera
             
         presentViewController(imagePicker!,animated: true,completion: nil)
     }

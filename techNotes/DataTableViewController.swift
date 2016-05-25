@@ -19,7 +19,7 @@ class DataTableViewController: UITableViewController,NSURLSessionDelegate{
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         //GETNOTE
         refresh(nil)
         
@@ -41,71 +41,73 @@ class DataTableViewController: UITableViewController,NSURLSessionDelegate{
         //REFRESHCONTROL
         
         refreshControl = UIRefreshControl()
-        refreshControl!.addTarget(self, action: "refresh:", forControlEvents: UIControlEvents.ValueChanged)
+        refreshControl!.addTarget(self, action: #selector(DataTableViewController.refresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
         //self.tableView.addSubview(refreshControl!)
+        
         
     }
     
     func refresh(sender:AnyObject?){
         
-        Notes.removeAll()
-        
-        let activityIndicatorView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.Gray)
-        
-        tableView.backgroundView = activityIndicatorView
-        
-        tableView.separatorStyle = UITableViewCellSeparatorStyle.None
-        
-        activityIndicatorView.startAnimating()
-        
-        //GET NOTE
-        var request = SOAP.getAllNotes()
-        var configuration =
-            NSURLSessionConfiguration.defaultSessionConfiguration()
-        var session = NSURLSession(configuration: configuration,
-                                   delegate: self,
-                                   delegateQueue:NSOperationQueue.mainQueue())
-        var task = session.dataTaskWithRequest(request){
-            (data: NSData?, response: NSURLResponse?, error: NSError?) -> Void in
-            var strData = NSString(data: data!, encoding: NSUTF8StringEncoding)
+        if Reachability.isConnectedToNetwork() {
             
-            let xml = SWXMLHash.parse(data!);
+            Notes.removeAll()
             
-            var count:Int = 0
+            let activityIndicatorView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.Gray)
             
-            for elem in xml["soap:Envelope"]["soap:Body"]["getAllNoteResponse"]["getAllNoteResult"]["anyType"].reverse() {
+            tableView.backgroundView = activityIndicatorView
+            
+            tableView.separatorStyle = UITableViewCellSeparatorStyle.None
+            
+            activityIndicatorView.startAnimating()
+            
+            //GET NOTE
+            let request = SOAP.getAllNotes()
+            let configuration =
+                NSURLSessionConfiguration.defaultSessionConfiguration()
+            let session = NSURLSession(configuration: configuration,
+                                       delegate: self,
+                                       delegateQueue:NSOperationQueue.mainQueue())
+            let task = session.dataTaskWithRequest(request){
+                (data: NSData?, response: NSURLResponse?, error: NSError?) -> Void in
+                _ = NSString(data: data!, encoding: NSUTF8StringEncoding)
                 
-                var str:String = (elem.element?.text)!
-                var strSplit = str.componentsSeparatedByString(";")
+                let xml = SWXMLHash.parse(data!);
                 
-                //id note client da
-                self.Notes.append(Note(id: Int(strSplit[0])!,
-                    Client: strSplit[2],
-                    Note: strSplit[1],
-                    Date: strSplit[3],
-                    Tech:strSplit[4],
-                    important:self.toBool(strSplit[5])!,
-                    idPhoto:strSplit[6]))
-            }
-            
-            dispatch_async(dispatch_get_main_queue(), { () -> Void in
-                
-                if self.refreshControl != nil {
-                    self.refreshControl?.endRefreshing()
+                for elem in xml["soap:Envelope"]["soap:Body"]["getAllNoteResponse"]["getAllNoteResult"]["anyType"].reverse() {
+                    
+                    let str:String = (elem.element?.text)!
+                    var strSplit = str.componentsSeparatedByString(";")
+                    
+                    //id note client da
+                    self.Notes.append(Note(id: Int(strSplit[0])!,
+                        Client: strSplit[2],
+                        Note: strSplit[1],
+                        Date: strSplit[3],
+                        Tech:strSplit[4],
+                        important:self.toBool(strSplit[5])!,
+                        idPhoto:strSplit[6]))
                 }
                 
-                sleep(1)
-                activityIndicatorView.stopAnimating()
-                self.tableView.separatorStyle = UITableViewCellSeparatorStyle.SingleLine
-                self.tableView.reloadData();
-            })
-            
-            if error != nil
-            {
-                print("Error: " + error!.description)
+                dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                    
+                    if self.refreshControl != nil {
+                        self.refreshControl?.endRefreshing()
+                    }
+                    
+                    sleep(1)
+                    activityIndicatorView.stopAnimating()
+                    self.tableView.separatorStyle = UITableViewCellSeparatorStyle.SingleLine
+                    self.tableView.reloadData();
+                })
+                
+                if error != nil
+                {
+                    print("Error: " + error!.description)
+                }
             }
+            task.resume()
         }
-        task.resume()
     }
     
     
@@ -128,11 +130,32 @@ class DataTableViewController: UITableViewController,NSURLSessionDelegate{
     
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
         // #warning Incomplete implementation, return the number of sections
+        if (Notes.count < 1) {
+            //create a lable size to fit the Table View
+            var messageLbl:UILabel = UILabel.init(frame: CGRectMake(0, 0,
+                    self.tableView.bounds.size.width,
+                    self.tableView.bounds.size.height))
+            //set the message
+            messageLbl.text = "Aucune note";
+            //center the text
+            messageLbl.textAlignment = NSTextAlignment.Center;
+            //auto size the text
+            messageLbl.sizeToFit()
+            
+            //set back to label view
+            self.tableView.backgroundView = messageLbl;
+            //no separator
+            self.tableView.separatorStyle = UITableViewCellSeparatorStyle.None;
+            
+            return 0;
+        }
+        
         return 1
     }
     
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
+        
         if searchController.active && searchController.searchBar.text != ""{
             return FilteredNote.count
         }
@@ -142,50 +165,50 @@ class DataTableViewController: UITableViewController,NSURLSessionDelegate{
     
     
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier("LabelCell", forIndexPath: indexPath) as! TableViewCell
+        var cell = tableView.dequeueReusableCellWithIdentifier("LabelCell", forIndexPath: indexPath) as! TableViewCell
         
         if Notes.count > 0 {
-        var temp:Note
-        
-        if searchController.active && searchController.searchBar.text != ""{
-            temp = FilteredNote[indexPath.row]
-        } else  {
-            temp = Notes[indexPath.row]
-        }
-        
-        // Configure the cell...
-        cell.Client.text = temp.getClient()
-        cell.Note.text = temp.getNote()
-        
-        let dateFormatter = NSDateFormatter()
-        dateFormatter.dateFormat = "dd/MM/yyyy hh-mm-ss"
-        let date = dateFormatter.dateFromString(temp.getDate())
-        
-        let displayDate = NSDateFormatter()
-        displayDate.dateFormat = "MMM dd"
-        cell.Date.text = displayDate.stringFromDate(date!)
-        
-        //TECH
-        var tech = temp.getTech()
-        
-        var strSplit = tech.componentsSeparatedByString(" ")
-        cell.Technicien.text = "\((strSplit[0] as NSString).substringToIndex(1))\((strSplit[1] as NSString).substringToIndex(1))"
-        
-        var path = UIBezierPath.init(ovalInRect: CGRect(x: 2.5, y: 24.5, width: 50.0, height: 50.0))
-        var maskLayer = CAShapeLayer()
-        maskLayer.path = path.CGPath
-        cell.ovalShape.layer.mask = maskLayer
-        
-        if NSUserDefaults.standardUserDefaults().colorForKey(tech) == nil {
-            var color = UIColor.randomColor()
-            cell.ovalShape.backgroundColor = color
-            NSUserDefaults.standardUserDefaults().setColor(color, forKey: tech)
-        } else {
-            cell.ovalShape.backgroundColor = NSUserDefaults.standardUserDefaults().colorForKey(tech)
-        }
-        
-        cell.Danger.hidden = !temp.getImportant()
-        cell.Photo.hidden = temp.getIdPhoto() == "0" ? true:false
+            var temp:Note
+            
+            if searchController.active && searchController.searchBar.text != ""{
+                temp = FilteredNote[indexPath.row]
+            } else  {
+                temp = Notes[indexPath.row]
+            }
+            
+            // Configure the cell...
+            cell.Client.text = temp.getClient()
+            cell.Note.text = temp.getNote()
+            
+            let dateFormatter = NSDateFormatter()
+            dateFormatter.dateFormat = "dd/MM/yyyy hh-mm-ss"
+            let date = dateFormatter.dateFromString(temp.getDate())
+            
+            let displayDate = NSDateFormatter()
+            displayDate.dateFormat = "MMM dd"
+            cell.Date.text = displayDate.stringFromDate(date!)
+            
+            //TECH
+            let tech = temp.getTech()
+            
+            var strSplit = tech.componentsSeparatedByString(" ")
+            cell.Technicien.text = "\((strSplit[0] as NSString).substringToIndex(1))\((strSplit[1] as NSString).substringToIndex(1))"
+            
+            let path = UIBezierPath.init(ovalInRect: CGRect(x: 2.5, y: 24.5, width: 50.0, height: 50.0))
+            let maskLayer = CAShapeLayer()
+            maskLayer.path = path.CGPath
+            cell.ovalShape.layer.mask = maskLayer
+            
+            if NSUserDefaults.standardUserDefaults().colorForKey(tech) == nil {
+                let color = UIColor.randomColor()
+                cell.ovalShape.backgroundColor = color
+                NSUserDefaults.standardUserDefaults().setColor(color, forKey: tech)
+            } else {
+                cell.ovalShape.backgroundColor = NSUserDefaults.standardUserDefaults().colorForKey(tech)
+            }
+            
+            cell.Danger.hidden = !temp.getImportant()
+            cell.Photo.hidden = temp.getIdPhoto() == "0" ? true:false
         }
         return cell
     }
@@ -212,17 +235,17 @@ class DataTableViewController: UITableViewController,NSURLSessionDelegate{
     
     override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
         
-        var temp = Notes[indexPath.row]
+        let temp = Notes[indexPath.row]
         
-        var lobj_Request: NSMutableURLRequest = SOAP.removeNote(String(temp.getid()));
+        let lobj_Request: NSMutableURLRequest = SOAP.removeNote(String(temp.getid()));
         
-        var configuration =
+        let configuration =
             NSURLSessionConfiguration.defaultSessionConfiguration()
-        var session = NSURLSession(configuration: configuration,
+        let session = NSURLSession(configuration: configuration,
                                    delegate: self,
                                    delegateQueue:NSOperationQueue.mainQueue())
         
-        var task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
+        let task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
             
         })
         task.resume()
@@ -230,13 +253,15 @@ class DataTableViewController: UITableViewController,NSURLSessionDelegate{
         Notes.removeAtIndex(indexPath.row)
         
         tableView.reloadData()
+        
+        self.setEditing(false, animated: false)
     }
     
     /*CALLBACK*/
     func URLSession(session: NSURLSession, didReceiveChallenge challenge: NSURLAuthenticationChallenge, completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential?) -> Void) {
-            if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust {
-                let credential = NSURLCredential(trust: challenge.protectionSpace.serverTrust!)
-                completionHandler(NSURLSessionAuthChallengeDisposition.UseCredential, credential)
+        if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust {
+            let credential = NSURLCredential(trust: challenge.protectionSpace.serverTrust!)
+            completionHandler(NSURLSessionAuthChallengeDisposition.UseCredential, credential)
         }
     }
     

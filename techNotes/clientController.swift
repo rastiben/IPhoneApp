@@ -34,25 +34,23 @@ class clientController: UITableViewController, UINavigationControllerDelegate ,N
         
         
         //GET NOTE
-        var lobj_Request: NSMutableURLRequest = SOAP.getCustomers();
+        let lobj_Request: NSMutableURLRequest = SOAP.getCustomers();
         
-        var configuration =
+        let configuration =
             NSURLSessionConfiguration.defaultSessionConfiguration()
-        var session = NSURLSession(configuration: configuration,
+        let session = NSURLSession(configuration: configuration,
                                    delegate: self,
                                    delegateQueue:NSOperationQueue.mainQueue())
         
-        var task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
-            
-            var strData = NSString(data: data!, encoding: NSUTF8StringEncoding)
-            
+        let task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
+
             let xml = SWXMLHash.parse(data!);
             ["anyType"]
             
-            var count:Int = 0
+            
             for elem in xml["soap:Envelope"]["soap:Body"]["CustomersResponse"]["CustomersResult"]["anyType"] {
                 
-                var str:String = (elem.element?.text)!
+                let str:String = (elem.element?.text)!
                 var strSplit = str.componentsSeparatedByString(";")
                 //id note client date
                 

@@ -56,21 +56,19 @@ class NoteViewController: UIViewController,NSURLSessionDelegate{
         
         if(note?.idPhoto != "0"){
             
-            var lobj_Request: NSMutableURLRequest = SOAP.getPicture(note!.idPhoto);
+            let lobj_Request: NSMutableURLRequest = SOAP.getPicture(note!.idPhoto);
             
-            var configuration =
+            let configuration =
                 NSURLSessionConfiguration.defaultSessionConfiguration()
-            var session = NSURLSession(configuration: configuration,
+            let session = NSURLSession(configuration: configuration,
                                        delegate: self,
                                        delegateQueue:NSOperationQueue.mainQueue())
         
-            var task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
-            
-                var strData = NSString(data: data!, encoding: NSUTF8StringEncoding)
-            
+            let task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
+
                 let xml = SWXMLHash.parse(data!);
                 
-                var base64:String = (xml["soap:Envelope"]["soap:Body"]["getPictureResponse"]["getPictureResult"].element?.text)!
+                let base64:String = (xml["soap:Envelope"]["soap:Body"]["getPictureResponse"]["getPictureResult"].element?.text)!
                 
                 let imageData = NSData(base64EncodedString: base64, options: [])
                 
