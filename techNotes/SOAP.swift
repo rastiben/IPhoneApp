@@ -89,7 +89,8 @@ class SOAP{
     }
     
     private class func createRequest(is_SoapMessage:String) -> NSMutableURLRequest{
-        let is_URL: String = "https://192.168.0.66/NotesService.asmx"
+        //let is_URL: String = "https://80.245.41.251/NotesService.asmx"
+        let is_URL: String = "https://bloc.viennedoc.fr/NotesService.asmx"
         
         let lobj_Request = NSMutableURLRequest(URL: NSURL(string: is_URL)!)
         

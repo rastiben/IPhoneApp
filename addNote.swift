@@ -9,7 +9,7 @@
 import UIKit
 import QuartzCore
 
-class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerControllerDelegate, UITableViewDelegate, UITableViewDataSource, NSURLSessionDelegate, UITextViewDelegate{
+class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerControllerDelegate, UITableViewDelegate, UITableViewDataSource, NSURLSessionDelegate, UITextViewDelegate, NSURLSessionTaskDelegate{
 
     @IBAction func doneEditing(sender: AnyObject) {
         NoteLabel.resignFirstResponder()
@@ -32,6 +32,10 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
     var dateNow:NSDate!
     var techChoose:Tech!
     
+    var progressView:UIProgressView!
+    var labelPercent:UILabel!
+    var photoSent:Bool!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -53,6 +57,8 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
         
         doneButton.enabled = false
         NoteLabel.delegate = self
+        
+        photoSent = false
         // Do any additional setup after loading the view.
     }
     
@@ -191,22 +197,24 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
             
             } else {
                 
-                let imageData:NSData = UIImageJPEGRepresentation(image.image!, 0.5)!
-                
-                let lobj_Request: NSMutableURLRequest = SOAP.uploadPhoto(imageData.base64EncodedStringWithOptions(.Encoding64CharacterLineLength));
-                
-                let configuration =
-                    NSURLSessionConfiguration.defaultSessionConfiguration()
-                let session = NSURLSession(configuration: configuration,
-                                           delegate: self,
-                                           delegateQueue:NSOperationQueue.mainQueue())
-                
-                let task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
- 
-                    let xml = SWXMLHash.parse(data!);
-                    let photo = xml["soap:Envelope"]["soap:Body"]["uploadPhotoResponse"]["uploadPhotoResult"].element?.text
+                //PROGRESSVIEW
+                let alertView = UIAlertController(title: "Envoie", message: "Upload de la photo", preferredStyle: .Alert)
+                //  Show it to your users
+                presentViewController(alertView, animated: true, completion: {
+                    //  Add your progressbar after alert is shown (and measured)
+                    let margin:CGFloat = 8.0
+                    var rect = CGRectMake(margin, 72.0, alertView.view.frame.width - margin * 2.0 , 2.0)
                     
-                    let lobj_Request: NSMutableURLRequest = SOAP.addNote(self.NoteLabel.text,date: dateFormatter.stringFromDate(self.dateNow) , idClient: String(self.clientChoose.getid()), idTech: String(self.techChoose.getid()), important: self.Important.on,photo: photo!);
+                    self.progressView = UIProgressView(frame: rect)
+                    self.progressView.progress = 0
+                    self.progressView.tintColor = UIColor.blueColor()
+                    alertView.view.addSubview(self.progressView)
+                    
+                    self.photoSent = true
+                    
+                    let imageData:NSData = UIImageJPEGRepresentation(self.image.image!, 0.1)!
+                    
+                    let lobj_Request: NSMutableURLRequest = SOAP.uploadPhoto(imageData.base64EncodedStringWithOptions(.Encoding64CharacterLineLength));
                     
                     let configuration =
                         NSURLSessionConfiguration.defaultSessionConfiguration()
@@ -215,13 +223,27 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
                         delegateQueue:NSOperationQueue.mainQueue())
                     
                     let task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
-                        self.navigationController?.popViewControllerAnimated(true)
+                        
+                        let xml = SWXMLHash.parse(data!);
+                        let photo = xml["soap:Envelope"]["soap:Body"]["uploadPhotoResponse"]["uploadPhotoResult"].element?.text
+                        
+                        let lobj_Request: NSMutableURLRequest = SOAP.addNote(self.NoteLabel.text,date: dateFormatter.stringFromDate(self.dateNow) , idClient: String(self.clientChoose.getid()), idTech: String(self.techChoose.getid()), important: self.Important.on,photo: photo!);
+                        
+                        let configuration =
+                            NSURLSessionConfiguration.defaultSessionConfiguration()
+                        let session = NSURLSession(configuration: configuration,
+                            delegate: self,
+                            delegateQueue:NSOperationQueue.mainQueue())
+                        
+                        let task = session.dataTaskWithRequest(lobj_Request, completionHandler: {data, response, error -> Void in
+                            alertView.dismissViewControllerAnimated(true, completion: nil)
+                            self.navigationController?.popViewControllerAnimated(true)
+                        })
+                        task.resume()
+                        
                     })
                     task.resume()
-                    
                 })
-                task.resume()
-                
             }
             
         } else {
@@ -240,6 +262,15 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
             let credential = NSURLCredential(trust: challenge.protectionSpace.serverTrust!)
             completionHandler(NSURLSessionAuthChallengeDisposition.UseCredential, credential)
         }
+    }
+    
+    func URLSession(session: NSURLSession, task: NSURLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
+        
+        if photoSent == true {
+            var uploadProgress:Float = Float(totalBytesSent) / Float(totalBytesExpectedToSend)
+            self.progressView.progress = uploadProgress
+        }
+        
     }
     
     func numberOfSectionsInTableView(tableView: UITableView) -> Int {
@@ -284,7 +315,8 @@ class addNote: UIViewController, UINavigationControllerDelegate, UIImagePickerCo
         
         //CHANGE TO CAMERA
         imagePicker!.sourceType = .Camera
-            
+        //imagePicker!.sourceType = .PhotoLibrary
+        
         presentViewController(imagePicker!,animated: true,completion: nil)
     }
 
