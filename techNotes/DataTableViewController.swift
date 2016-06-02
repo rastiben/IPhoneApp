@@ -150,6 +150,8 @@ class DataTableViewController: UITableViewController,NSURLSessionDelegate{
             return 0;
         }
         
+        self.tableView.backgroundView = nil
+        
         return 1
     }
     

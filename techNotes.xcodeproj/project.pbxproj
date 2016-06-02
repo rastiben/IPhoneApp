@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		5C4489821D0010F80069958D /* DemandeDeDevisController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C4489811D0010F80069958D /* DemandeDeDevisController.swift */; };
+		5C4489841D00577F0069958D /* DatePickerDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C4489831D00577F0069958D /* DatePickerDialog.swift */; };
 		5C4B08C11CF5E3AB0078EC1C /* Reachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C4B08C01CF5E3AB0078EC1C /* Reachability.swift */; };
 		5C59B8C41CF483B50050C6FF /* Techs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C59B8C31CF483B50050C6FF /* Techs.swift */; };
 		5C59B8C61CF483C00050C6FF /* Customers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C59B8C51CF483C00050C6FF /* Customers.swift */; };
@@ -48,6 +49,7 @@
 
 /* Begin PBXFileReference section */
 		5C4489811D0010F80069958D /* DemandeDeDevisController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemandeDeDevisController.swift; sourceTree = "<group>"; };
+		5C4489831D00577F0069958D /* DatePickerDialog.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DatePickerDialog.swift; sourceTree = "<group>"; };
 		5C4B08C01CF5E3AB0078EC1C /* Reachability.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Reachability.swift; sourceTree = "<group>"; };
 		5C59B8C31CF483B50050C6FF /* Techs.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Techs.swift; sourceTree = "<group>"; };
 		5C59B8C51CF483C00050C6FF /* Customers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Customers.swift; sourceTree = "<group>"; };
@@ -137,6 +139,7 @@
 				9D18257E1CE0CFBB0013BF26 /* DataTableViewController.swift */,
 				5C4B08C01CF5E3AB0078EC1C /* Reachability.swift */,
 				9DB7A91B1CE1BAE60041ABB9 /* SOAP.swift */,
+				5C4489831D00577F0069958D /* DatePickerDialog.swift */,
 				9DB7A91F1CE1C1E30041ABB9 /* Notes.swift */,
 				5C59B8C31CF483B50050C6FF /* Techs.swift */,
 				5C59B8C51CF483C00050C6FF /* Customers.swift */,
@@ -303,6 +306,7 @@
 				5C4B08C11CF5E3AB0078EC1C /* Reachability.swift in Sources */,
 				5CB4E08F1CED970A00D83994 /* SWXMLHash.swift in Sources */,
 				5C5ADB9E1CF33FBA00F59973 /* clientController.swift in Sources */,
+				5C4489841D00577F0069958D /* DatePickerDialog.swift in Sources */,
 				9DB7A9201CE1C1E30041ABB9 /* Notes.swift in Sources */,
 				9DB7A91C1CE1BAE60041ABB9 /* SOAP.swift in Sources */,
 				9D1B80091CE1DBD700328B2C /* NoteViewController.swift in Sources */,

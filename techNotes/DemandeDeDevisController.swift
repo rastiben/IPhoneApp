@@ -22,6 +22,7 @@ class DemandeDeDevisController: UIViewController,MFMailComposeViewControllerDele
     @IBOutlet weak var telContact: UITextField!
     @IBOutlet weak var urgence: UISwitch!
     @IBOutlet weak var echeance: UITextField!
+
     
     override func viewDidLoad() {
 
@@ -86,6 +87,21 @@ class DemandeDeDevisController: UIViewController,MFMailComposeViewControllerDele
     
     func mailComposeController(controller: MFMailComposeViewController, didFinishWithResult result: MFMailComposeResult, error: NSError?) {
         controller.dismissViewControllerAnimated(true, completion: nil)
+    }
+    
+
+    @IBAction func editDidBegin(sender: AnyObject) {
+        
+        DatePickerDialog().show("DatePicker",doneButtonTitle: "Ok",cancelButtonTitle: "Annuler",datePickerMode: .Date){
+            (date) -> Void in
+            //self.echeance.text = "\(date)"
+
+            let displayDate = NSDateFormatter()
+            displayDate.dateFormat = "dd MMMM yyyy"
+            self.echeance.text = displayDate.stringFromDate(date)
+            
+            self.echeance.resignFirstResponder()
+        }
     }
 
     /*
